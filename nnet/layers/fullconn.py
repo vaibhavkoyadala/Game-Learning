@@ -1,4 +1,4 @@
-from base import Base
+import base
 from ..weights import make_weights
 import numpy as np
 import theano
@@ -6,54 +6,43 @@ import theano.tensor as T
 
 __all__ = ["FullConn"]
 
-class FullConn(Base):
+class FullConn(base.Base):
     """
     Represents a fully connected layer.
     
-    Attributes:
-    input:  theano.tensor - input to the layer.
-    out:    Symbolic theano.tensor which gives the output 
-            of the layer without the activation.   
+    Additional Attributes:
+    ---------------------
     W:      theano.tensor - weights of the layer.
             This is used to compute gradients of the layer.
     b:      theano.tensor - biases of the layer.
             This is used to compute gradients of the layer.
     """
     
-    def __init__(self, layer_no, input, n_in, n_out, activation, W=None, b=None, seed=None):
+    def __init__(self, input, n_out, activation, W=None, b=None, seed=None):
         """
-        :type layer_no:     int
-        :type input:        Another layer or theano.tensor
-        :type n_in:         int
+        :type input:        input to this layer
         :type n_out:        int
         :type activation:   theano.tensor
-        :type W:            numpy.ndarray
-        :type b:            numpy.ndarray
+        :type W:            numpy.ndarray or None
+        :type b:            numpy.ndarray or None
         :type seed:         int or None
         
-        :param layer_no:    The position of the layer in the 
-                            neural network. 
-                            This will be used to name this layer 
-                            and any theano variables.
-
-        :param n_in:       number of input connections
-        
-        :param n_out:      number of output connections
-        
+        :param input:       Input to this layer
+        :param n_out:       number of output connections
         :param W:           If W is provided, it will be used instead
-                            of populating W using weights.make_weights.
-                            (In which case, :seed will be used)
+                            of populating W using seed.
         :param b:           If b is provided, it will be used instead
-                            of populating b using weights.make_weights.
-                            (In which case, :seed will be used)
+                            of populating b using seed.
+        :param seed:        seed to use to generate random values for W, b
         """
-        self.layer_no = layer_no
-        if isinstance(input, Base):
-            self.input = input.out
-        else:
-            self.input = input
-        self.n_in = n_in
-        self.n_out = n_out
+
+        assert input.ndim == 1, "Incompatibility: ndim-{} of input-{} is not 1".format(input.ndim, input)
+
+
+        layer_no = input.layer_no+1
+        super(FullConn, self).__init__(layer_no, input)
+
+        n_in = input.shape[0]
 
         w_shape = (n_in, n_out)
         if W is None:
@@ -85,7 +74,10 @@ class FullConn(Base):
                                name='b{}'.format(layer_no),
                                borrow=True)
 
-        self.out = activation(T.dot(self.input, self.W) + self.b)
+        self.out = activation(T.dot(self.input.out, self.W) + self.b)
+        self.params = (self.W, self.b)
+        self.shape = (n_out, )
+        self.ndim = 1
 
     def __str__(self):
         return '<FullConn layer {}>'.format(self.layer_no)

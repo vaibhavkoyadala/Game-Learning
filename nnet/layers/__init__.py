@@ -1,2 +1,5 @@
+from inputlayer import *
 from fullconn import *
-from con2d import *
+from conv2d import *
+from pool2d import *
+from flatten import *
