@@ -2,8 +2,8 @@ import theano
 import theano.tensor as T
 import numpy as np
 
-import nnet
-import nnet.layers as layers
+import sandwich
+import sandwich.layers as layers
 
 from itertools import chain
 
@@ -70,6 +70,9 @@ def extract_training_data(name):
 def train_and_save(model, archive_name):
 
     y, o = model.y, model.o
+    # print 'y', theano.pp(y)
+    # print 'o', theano.pp(o)
+
     cost = -T.mean(y * T.log(o) + (1 - y) * T.log(1 - o))
 
     # Get the training set as lists
@@ -83,7 +86,29 @@ def train_and_save(model, archive_name):
     for i, label in enumerate(labels):
         y[i, label] = 1
 
-    last_cost = model.train(x, y, cost, learning_rate=1, n_epochs=15000)
+    for batch in xrange(6):
+        last_cost = model.train(x, y, cost, learning_rate=0.02, n_epochs=5000, momentum=0.5)
+        print 'Batch {}'.format(batch)
+        o = model.feedforward(x)
+        o = np.argmax(o, axis=1)
+        error = np.count_nonzero(o - np.argmax(y, axis=1))
+        print 'Misclassified {} in {}'.format(error, o.shape[0])
+        archive = open(archive_name+str(batch), 'w')
+        extra = {'last_cost': last_cost}
+        model.dump(archive, extra=extra)
+        archive.close()
+
+def test(model):
+    # Get the training set as lists
+    bitmaps, labels = extract_training_data("digits.va")[:5]
+
+    # Convert the evaluation set to numpy.ndarray
+    x = np.asarray(bitmaps, dtype=theano.config.floatX)
+    n_instances = x.shape[0]
+    x = x.reshape((n_instances, 1, 32, 32))
+    y = np.zeros((len(labels), 10), dtype=theano.config.floatX)
+    for i, label in enumerate(labels):
+        y[i, label] = 1
 
     o = model.feedforward(x)
     o = np.argmax(o, axis=1)
@@ -92,69 +117,40 @@ def train_and_save(model, archive_name):
     error = np.count_nonzero(o - np.argmax(y, axis=1))
     print 'Misclassified {} in {}'.format(error, o.shape[0])
 
-    archive = open('archive_name', 'w')
-    extra = {'last_cost': last_cost}
-    model.dump(archive, extra=extra)
-
-
-def fullyconn_load_test(archive_name):
-    with open('digits.model') as saved:
-        meta, extra, saved_model = nnet.NNet.load(saved)
-        print 'Meta: ', meta
-        print 'Extra:', extra
-        W1, b1, W2, b2 = saved_model['W1'], saved_model['b1'], saved_model['W2'], saved_model['b2']
-
-        import nnet.layers as layers
-
-        input_layer = layers.InputLayer(shape=(32 * 32,))
-        hidden_layer = layers.FullConn(input_layer, 700, activation=T.nnet.softmax, W=W1, b=b1)
-        last_layer = layers.FullConn(hidden_layer, 10, activation=T.nnet.softmax, W=W2, b=b2)
-
-        all_layers = [input_layer, hidden_layer, last_layer]
-
-        model = nnet.NNet('Handwritten digits', layers=all_layers)
-
-        # Get the training set as lists
-        bitmaps, labels = extract_training_data("digits.va")
-
-        # Convert the evaluation set to numpy.ndarray
-        x = np.asarray(bitmaps, dtype=theano.config.floatX)
-        y = np.zeros((len(labels), 10), dtype=theano.config.floatX)
-        for i, label in enumerate(labels):
-            y[i, label] = 1
-
-        o = model.feedforward(x)
-        o = np.argmax(o, axis=1)
-        print 'Predicted:', o
-        print '   Actual:', np.argmax(y, axis=1)
-        error = np.count_nonzero(o - np.argmax(y, axis=1))
-        print 'Misclassified {} in {}'.format(error, o.shape[0])
-
 if __name__ == "__main__":
-    import nnet.layers as layers
+    import sandwich.layers as layers
 
     activation = T.nnet.sigmoid
 
+    # saved = open('digits.2layerfc012345')
+    # meta, extra, saved_model = sandwich.NNet.load(saved)
+    # print 'Meta: ', meta
+    # print 'Extra:', extra['last_cost']
+    # W1, b1, W3, b3 = None, None, None, None # saved_model['W1'], saved_model['b1'], saved_model['W3'], saved_model['b3']
+    # W6, b6, W7, b7 = None, None, None, None #saved_model['W6'], saved_model['b6'], saved_model['W7'], saved_model['b7']
     input_layer = layers.InputLayer(shape=(1, 32, 32))
-    print 'input_layer -shape', input_layer.shape
 
-    conv1_layer = layers.Conv2D( input_layer, n_features=12, filter_size=(4, 4),
-                                  activation=activation)
-    print 'conv1_layer -shape', conv1_layer.shape
+    C1 = layers.Conv2D( input_layer, n_features=4, filter_size=(5, 5),
+                                  activation=T.nnet.relu)
 
-    pool1_layer = layers.Pool2D( conv1_layer, pool_size=(2, 2))
-    print 'pool1_layer -shape', pool1_layer.shape
+    S2 = layers.Pool2D( C1, pool_size=(2, 2))
 
-    flatten_layer = layers.Flatten(pool1_layer)
-    print 'flatten_layer -shape', flatten_layer.shape
+    C3 = layers.Conv2D(S2, n_features=6, filter_size=(5, 5),
+                                activation=T.nnet.relu)
 
-    last_layer = layers.FullConn(flatten_layer, 10, activation=activation)
-    print 'last_layer -shape', last_layer.shape
+    S4 = layers.Pool2D(C3, pool_size=(2, 2))
 
-    all_layers = [input_layer, conv1_layer, pool1_layer, flatten_layer, last_layer]
+    flatten_layer = layers.Flatten(S4)
 
-    model = nnet.NNet('Handwritten digits', layers=all_layers)
+    fc_layer = layers.FullConn(flatten_layer, 500, activation=activation)
 
-    train_and_save(model, 'conv_digits.model')
-    #fullyconn_load_test(model)
+    last_layer = layers.FullConn(fc_layer, 10, activation=activation)
+
+    all_layers = [input_layer, C1, S2, C3, flatten_layer, fc_layer, last_layer]
+
+    model = sandwich.NNet('Handwritten digits', layers=all_layers)
+
+    print str(model)
+    train_and_save(model, 'digits.2layerfc')
+    # test(model)
 

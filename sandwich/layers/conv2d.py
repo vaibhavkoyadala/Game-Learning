@@ -55,6 +55,7 @@ class Conv2D(base.Base):
         self.stride = stride
         self.padding = padding
         self.params = (self.W, self.b)
+        self.ndim = len(self.shape)
         # Build the symbolic expression that computes the convolution
         conv_out = conv2d(self.input.out, self.W, subsample=stride)
         self.out = activation(conv_out + self.b.dimshuffle('x', 0, 'x', 'x'))

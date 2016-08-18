@@ -18,3 +18,6 @@ class Flatten(base.Base):
         self.shape = (reduce(lambda a, b: a*b, self.input.shape), )
         self.ndim = 1
         self.params = tuple()
+
+    def __str__(self):
+        return '<Flatten layer-{}>'.format(self.layer_no)

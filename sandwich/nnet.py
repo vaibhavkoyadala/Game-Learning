@@ -1,8 +1,7 @@
 import theano
 import theano.tensor as T
 import cPickle
-from itertools import izip
-from layers import InputLayer
+from layers.inputlayer import InputLayer
 class NNet():
     """
     Represents a Neural Network.
@@ -23,29 +22,31 @@ class NNet():
         self.o = layers[-1].out
         self.o_function = theano.function([self.x], self.o)
 
-    def train(self, x, y, cost, learning_rate, n_epochs):
+    def train(self, x, y, cost, learning_rate, n_epochs, momentum=0):
+        assert  0 <= momentum < 1, 'Momentum={} should be between [0, 1).'.format(momentum)
+
         params = []
         for layer in self.layers:
             params += layer.params
 
-        grads = T.grad(cost, wrt=params)
+        updates = []
+        for param in params:
 
-        updates = {(param, param - learning_rate * grad) for param, grad in izip(params, grads)}
+            grad = T.grad(cost, wrt=param)
+            
+            # prev_grad = theano.shared(param.get_value()*0, broadcastable=param.broadcastable)
+            # updates.append((prev_grad, learning_rate*grad - momentum*prev_grad))
+            updates.append((param, param-learning_rate*grad))
+
         backprop = theano.function([self.x, self.y],
-                                outputs=cost,
-                                updates=updates)
+                                   outputs=cost,
+                                   updates=updates)
 
-        prev_cost = float("inf")
         for epoch in xrange(n_epochs):
-            cost = backprop(x, y)
-            print '{:>4} | {}'.format(epoch, cost)
+            curr_cost = backprop(x, y)
+            print '{:>4} | {}'.format(epoch, curr_cost)
 
-            if cost > prev_cost:
-                print 'Warning: Potential jumping in gradient descent'
-                print 'Current cost {} is greater than previous cost {}'.format(cost, prev_cost)
-                prev_cost = cost
-
-        return cost
+        return curr_cost
 
     def feedforward(self, x):
         return self.o_function(x)
@@ -75,4 +76,11 @@ class NNet():
 
         return meta, extra, model
 
+
+    def __str__(self):
+        str = self.name + ' :: '
+        for layer in self.layers:
+            str += ' |{}{}'.format(layer, layer.shape)
+
+        return str + '|'
 
