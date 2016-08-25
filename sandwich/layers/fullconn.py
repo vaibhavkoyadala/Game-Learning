@@ -38,15 +38,15 @@ class FullConn(base.Base):
 
         assert input.ndim == 1, "Incompatibility: ndim-{} of input-{} is not 1".format(input.ndim, input)
 
+        super(FullConn, self).__init__(input)
+        self.shape = (n_out,)
+        self.ndim = 1
+        self.activation = activation
 
-        layer_no = input.layer_no+1
-        super(FullConn, self).__init__(layer_no, input)
-
-        n_in = input.shape[0]
-
+        n_in, = input.shape
         w_shape = (n_in, n_out)
         if W is None:
-            W = make_weights(shape=w_shape, activation=activation, seed=seed)
+            W = make_weights(w_shape, n_in, n_out, activation=activation, seed=seed)
         elif isinstance(W, np.ndarray):
             assert W.shape == w_shape,  "Shape of given W does not match given n_in, n_out. " \
                                         "{} != {}".format(W.shape, w_shape)
@@ -55,29 +55,23 @@ class FullConn(base.Base):
 
         b_shape = (n_out, )
         if b is None:
-            b = np.zeros(
-                shape=b_shape,
-                dtype=theano.config.floatX,
-            )
+            b = np.zeros(shape=b_shape, dtype=theano.config.floatX)
         elif isinstance(b, np.ndarray):
             assert b.shape == b_shape,  "Shape of given b does not match given n_in, n_out. " \
                                         "{} != {}".format(b.shape, b_shape)
         else:
             raise Exception("Unsupported b type {}.".format(type(b)))
 
-        # Uptil now, W, b are of type numpy.ndarray,
-        # make them theano's shared variables.
         self.W = theano.shared(W,
-                               name='W{}'.format(layer_no),
+                               name='W{}'.format(self.layer_no),
                                borrow=True)
         self.b = theano.shared(b,
-                               name='b{}'.format(layer_no),
+                               name='b{}'.format(self.layer_no),
                                borrow=True)
 
-        self.out = activation(T.dot(self.input.out, self.W) + self.b)
         self.params = (self.W, self.b)
-        self.shape = (n_out, )
-        self.ndim = 1
+        out = T.dot(self.input.out, self.W) + self.b
+        self.out = out if activation is None else activation(out)
 
     def __str__(self):
         return '<FullConn layer {}>'.format(self.layer_no)

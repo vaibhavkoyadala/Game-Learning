@@ -31,7 +31,7 @@ class Base(object):
             :out, again deals with a dataset.
     """
     
-    def __init__(self, layer_no, input):
+    def __init__(self, input):
         """
         :type layer_no:     int
         :type input:        Another layer or theano.tensor
@@ -42,7 +42,10 @@ class Base(object):
                             and any theano variables.
         :param input:       Input to this layer
         """
-        self.layer_no = layer_no
+        if input is None:
+            self.layer_no = 0
+        else:
+            self.layer_no = input.layer_no + 1
         self.input = input
         self.out = NotImplemented
         self.params = NotImplemented

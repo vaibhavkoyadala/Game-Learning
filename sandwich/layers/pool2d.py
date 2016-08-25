@@ -14,24 +14,28 @@ class Pool2D(base.Base):
         Extra Attributes:
         ----------------
         pool_size:
+        padding:
+        stride:
+
         """
-    def __init__(self, input, pool_size, padding=None, stride=None, mode='max', ignore_border=True):
+    def __init__(self, input, pool_size, padding=(0, 0), stride=None, mode='max', ignore_border=True, activation=None):
 
         assert input.ndim >= 3, "Incompatibility: ndim-{} of input-{} is not >= 3".format(input.ndim, input)
 
-        super(Pool2D, self).__init__(input.layer_no + 1, input)
-        if padding is None:
-            padding = (0, 0)
-        if stride is None:
-            stride = pool_size
-        self.out = pool.pool_2d(self.input.out, pool_size,
-                                padding=padding,
-                                st=stride,
-                                ignore_border=ignore_border,
-                                mode=mode)
-        self.shape = Pool2D.out_shape(input.shape, pool_size, stride, padding, ignore_border)
-        self.ndim = self.input.ndim
+        super(Pool2D, self).__init__(input)
+        self.stride = pool_size if stride is None else stride
         self.params = tuple()
+        self.padding = padding
+        self.shape = Pool2D.out_shape(input.shape, pool_size, self.stride, padding, ignore_border)
+        self.ndim = len(self.shape)
+        self.activation = activation
+        out = pool.pool_2d(self.input.out,
+                           pool_size,
+                           padding=padding,
+                           st=stride,
+                           ignore_border=ignore_border,
+                           mode=mode)
+        self.out = out if activation is None else activation(out)
 
     @staticmethod
     def out_shape(input_shape, pool_size, stride, padding, ignore_border):

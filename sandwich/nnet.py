@@ -22,22 +22,7 @@ class NNet():
         self.o = layers[-1].out
         self.o_function = theano.function([self.x], self.o)
 
-    def train(self, x, y, cost, learning_rate, n_epochs, momentum=0):
-        assert  0 <= momentum < 1, 'Momentum={} should be between [0, 1).'.format(momentum)
-
-        params = []
-        for layer in self.layers:
-            params += layer.params
-
-        updates = []
-        for param in params:
-
-            grad = T.grad(cost, wrt=param)
-            
-            # prev_grad = theano.shared(param.get_value()*0, broadcastable=param.broadcastable)
-            # updates.append((prev_grad, learning_rate*grad - momentum*prev_grad))
-            updates.append((param, param-learning_rate*grad))
-
+    def train(self, x, y, cost, updates, n_epochs):
         backprop = theano.function([self.x, self.y],
                                    outputs=cost,
                                    updates=updates)

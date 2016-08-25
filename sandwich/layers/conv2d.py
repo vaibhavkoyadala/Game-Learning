@@ -18,27 +18,34 @@ class Conv2D(base.Base):
         stride:
         padding:
         """
-    def __init__(self, input, n_features, filter_size, activation,
-                 stride=(1, 1), padding=(0, 0), W=None, b=None, seed=None):
+    def __init__(self, input, n_features, filter_size,
+                 stride=(1, 1), padding=(0, 0), activation=None, W=None, b=None, seed=None):
 
+        # Minimum ndim of the inut layer must be 3. (n_features, height, width)
         assert input.ndim == 3, "Incompatibility: ndim-{} of input-{} is not 3".format(input.ndim, input)
-        layer_no = input.layer_no+1
-        super(Conv2D, self).__init__(layer_no, input)
 
-        n_input_features = input.shape[0]
-
+        super(Conv2D, self).__init__(input)
+        self.n_features = n_features
+        self.filter_size = filter_size
+        self.stride = stride
+        self.padding = padding
+        self.activation = activation
         self.shape = Conv2D.out_shape(input.shape, n_features, filter_size, stride, padding)
-        # TODO: Show params in exception message
-        if self.shape is None:
-            raise Exception("Invalid combinations of filter_size, stride, padding for input")
+        self.ndim = len(self.shape)
 
-        w_shape = (n_features, n_input_features, filter_size[0], filter_size[1])
+        # height, width of each filter
+        height, width = filter_size
+        n_in_features = input.shape[0]
+        n_in = n_in_features * height * width
+        n_out = n_features * height * width
+
+        # w_shape = (n_features, n_in_features, filter_height, filter_width)
+        w_shape = (n_features, n_in_features, height, width)
         if W is None:
-            W = weights.make_weights(w_shape, seed=seed, activation=activation)
+            W = weights.make_weights(w_shape, n_in, n_out, seed=seed, activation=activation)
         else:
             assert W.shape == w_shape,  "Shape of given weights {} does not match the"\
                                         "shape inferred from the given parameters. {}".format(W.shape, w_shape)
-        self.W = theano.shared(W, name='W{}'.format(layer_no))
 
         b_shape = (n_features, )
         if b is None:
@@ -46,19 +53,26 @@ class Conv2D(base.Base):
         else:
             assert b.shape == b_shape,  "Shape of given biases {} does not match the "\
                                         "shape inferred from the given parameters {}.".format(b.shape, b_shape)
-        self.b = theano.shared(b, name='b{}'.format(layer_no))
 
+        self.W = theano.shared(W, name='W{}'.format(self.layer_no), borrow=True)
+        self.b = theano.shared(b, name='b{}'.format(self.layer_no), borrow=True)
 
-
-        self.n_features = n_features
-        self.filter_size = filter_size
-        self.stride = stride
-        self.padding = padding
-        self.params = (self.W, self.b)
-        self.ndim = len(self.shape)
         # Build the symbolic expression that computes the convolution
-        conv_out = conv2d(self.input.out, self.W, subsample=stride)
-        self.out = activation(conv_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+        out = conv2d(input=self.input.out,
+                          filters=self.W,
+                          filter_shape=w_shape,
+                          subsample=stride,
+                          input_shape=(None, )+self.input.shape) \
+              + self.b.dimshuffle('x', 0, 'x', 'x')
+
+        if activation is not None:
+            self.out = activation(out)
+        else:
+            self.out = out
+
+        self.params = (self.W, self.b)
+
+
 
     @staticmethod
     def out_shape(input_shape, n_features, filter_size, stride, padding):
@@ -88,7 +102,7 @@ class Conv2D(base.Base):
         hs, vs = stride
         hp, vp = padding
         if (H-h+2*vp) % vs or (W-w+2*hp) % hs:
-            return None
+            raise Exception("Invalid combinations of filter_size, stride, padding for input.")
         return n_features, (H-h+2*vp) / vs +1, (W-w+2*hp) / hs +1
 
     def __str__(self):

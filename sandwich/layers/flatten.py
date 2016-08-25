@@ -12,8 +12,7 @@ class Flatten(base.Base):
     def __init__(self, input):
 
 
-        super(Flatten, self).__init__(input.layer_no + 1, input)
-
+        super(Flatten, self).__init__(input)
         self.out = self.input.out.flatten(2)
         self.shape = (reduce(lambda a, b: a*b, self.input.shape), )
         self.ndim = 1
