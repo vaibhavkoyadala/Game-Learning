@@ -5,12 +5,15 @@ Project to learn and play games using Deep Learning. (a week old)
 Sandwich is a lib to build a Neural Network. Much like 'lasange'.
 
 # Current status
-- Testing by training a Net to recognize handwritten digits.
-- Built basic layers: InputLayer, FullConn, Conv2D, Pool, Flatten
+- Tested sandwich by training a LeNet to recognize handwritten digits.
+- Added and tested various Gradient descent optimization techniques.
 
 # Results
-- A single layer and a two layer Fully connected network give an accuracy of about 90%.
-- A Conv Neural Network however, seems to be stuck at a local minima. (tuning the parameters doesn't seem to work ...)
+- Succesfully learns to recognize handwritten digits.
+
+# Future work
+- Use a NNet and policy learning to learn to play ping-pong. (Specifically ping-pong).
+- Implement Google's deep game learning to play any Atari Game.
 
 # Finding your way around
 + *digits.tra*: Training dataset for handwritten digits.
