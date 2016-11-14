@@ -13,7 +13,7 @@ __all__ = ['vanilla',
            'adam']
 
 
-def vanilla(layers, cost, learning_rate=0.01):
+def vanilla(nnet, cost, learning_rate=0.01):
     """
 
     :param layers:  list/tuple of layers
@@ -22,7 +22,7 @@ def vanilla(layers, cost, learning_rate=0.01):
     """
 
     params = tuple()
-    for layer in layers:
+    for layer in nnet:
         params += layer.params
 
     grads = theano.grad(cost, wrt=params)
@@ -32,7 +32,7 @@ def vanilla(layers, cost, learning_rate=0.01):
     return updates
 
 
-def momentum(layers, cost, learning_rate=0.01, decay=0.5):
+def momentum(nnet, cost, learning_rate=0.01, decay=0.5):
     """
 
     :param layers:
@@ -43,7 +43,7 @@ def momentum(layers, cost, learning_rate=0.01, decay=0.5):
     """
 
     params = tuple()
-    for layer in layers:
+    for layer in nnet:
         params += layer.params
 
     grads = theano.grad(cost, wrt=params)
@@ -59,7 +59,7 @@ def momentum(layers, cost, learning_rate=0.01, decay=0.5):
     return updates
 
 
-def nesterov_momentum(layers, cost, learning_rate=0.01, decay=0.9):
+def nesterov_momentum(nnet, cost, learning_rate=0.01, decay=0.9):
     """
 
         :param layers:
@@ -70,7 +70,7 @@ def nesterov_momentum(layers, cost, learning_rate=0.01, decay=0.9):
     """
 
     params = tuple()
-    for layer in layers:
+    for layer in nnet:
         params += layer.params
 
     grads = theano.grad(cost, wrt=params)
@@ -88,9 +88,9 @@ def nesterov_momentum(layers, cost, learning_rate=0.01, decay=0.9):
     return updates
 
 
-def adagrad(layers, cost, initial_learning_rate=0.01, eps=1e-8):
+def adagrad(nnet, cost, initial_learning_rate=0.01, eps=1e-8):
     params = tuple()
-    for layer in layers:
+    for layer in nnet:
         params += layer.params
 
     grads = theano.grad(cost, wrt=params)
@@ -107,9 +107,9 @@ def adagrad(layers, cost, initial_learning_rate=0.01, eps=1e-8):
     return updates
 
 
-def adadelta(layers, cost, decay=0.9, eps=1e-8):
+def adadelta(nnet, cost, decay=0.9, eps=1e-8):
     params = tuple()
-    for layer in layers:
+    for layer in nnet:
         params += layer.params
 
     grads = theano.grad(cost, wrt=params)
@@ -129,9 +129,9 @@ def adadelta(layers, cost, decay=0.9, eps=1e-8):
 
     return updates
     
-def rmsprop(layers, cost, initial_learning_rate=0.01, decay=0.9, eps=1e-8):
+def rmsprop(nnet, cost, initial_learning_rate=0.01, decay=0.9, eps=1e-8):
     params = tuple()
-    for layer in layers:
+    for layer in nnet:
         params += layer.params
 
     grads = theano.grad(cost, wrt=params)
@@ -147,10 +147,14 @@ def rmsprop(layers, cost, initial_learning_rate=0.01, decay=0.9, eps=1e-8):
 
     return updates
 
-def adam(layers, cost, initial_learning_rate=0.01, beta1=0.9, beta2=0.999, eps=1e-8):
+def adam(nnet, cost, initial_learning_rate=0.01, beta1=0.9, beta2=0.999, eps=1e-8):
+
+    # -------------------------------------
     # TODO: Incomplete implementation (adam)
+    # -------------------------------------
+
     params = tuple()
-    for layer in layers:
+    for layer in nnet:
         params += layer.params
 
     grads = theano.grad(cost, wrt=params)

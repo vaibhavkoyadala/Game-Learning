@@ -10,13 +10,11 @@ class Pool2D(base.Base):
     """
         Represents a Pooling layer.
         (Pooling in 2D)
-
         Extra Attributes:
         ----------------
         pool_size:
         padding:
         stride:
-
         """
     def __init__(self, input, pool_size, padding=(0, 0), stride=None, mode='max', ignore_border=True, activation=None):
 

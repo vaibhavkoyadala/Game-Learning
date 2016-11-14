@@ -34,7 +34,7 @@ class Base(object):
     def __init__(self, input):
         """
         :type layer_no:     int
-        :type input:        Another layer or theano.tensor
+        :type input:        The input layer or None
 
         :param layer_no:    The position of the layer in the
                             neural network.
@@ -51,6 +51,9 @@ class Base(object):
         self.params = NotImplemented
         self.shape = NotImplemented
         self.ndim = NotImplemented
+
+    def __iter__(self):
+        return iter(self.params)
 
     def __str__(self):
         return '<Base layer {}>'.format(self.layer_no)

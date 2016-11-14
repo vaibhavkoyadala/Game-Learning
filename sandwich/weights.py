@@ -35,5 +35,4 @@ def make_weights(w_shape, n_in, n_out, activation, seed=None, dtype=theano.confi
 
     if activation == T.nnet.sigmoid:
         W *= 4
-
     return W

@@ -6,10 +6,11 @@ import theano.tensor as T
 
 __all__ = ["FullConn"]
 
+
 class FullConn(base.Base):
     """
     Represents a fully connected layer.
-    
+
     Additional Attributes:
     ---------------------
     W:      theano.tensor - weights of the layer.
@@ -17,8 +18,8 @@ class FullConn(base.Base):
     b:      theano.tensor - biases of the layer.
             This is used to compute gradients of the layer.
     """
-    
-    def __init__(self, input, n_out, activation, W=None, b=None, seed=None):
+
+    def __init__(self, input, n_out, activation=None, W=None, b=None, seed=None):
         """
         :type input:        input to this layer
         :type n_out:        int
@@ -26,7 +27,7 @@ class FullConn(base.Base):
         :type W:            numpy.ndarray or None
         :type b:            numpy.ndarray or None
         :type seed:         int or None
-        
+
         :param input:       Input to this layer
         :param n_out:       number of output connections
         :param W:           If W is provided, it will be used instead
@@ -48,17 +49,17 @@ class FullConn(base.Base):
         if W is None:
             W = make_weights(w_shape, n_in, n_out, activation=activation, seed=seed)
         elif isinstance(W, np.ndarray):
-            assert W.shape == w_shape,  "Shape of given W does not match given n_in, n_out. " \
-                                        "{} != {}".format(W.shape, w_shape)
+            assert W.shape == w_shape, "Shape of given W does not match given n_in, n_out. " \
+                                       "{} != {}".format(W.shape, w_shape)
         else:
             raise Exception("Unsupported W type {}.".format(type(W)))
 
-        b_shape = (n_out, )
+        b_shape = (n_out,)
         if b is None:
             b = np.zeros(shape=b_shape, dtype=theano.config.floatX)
         elif isinstance(b, np.ndarray):
-            assert b.shape == b_shape,  "Shape of given b does not match given n_in, n_out. " \
-                                        "{} != {}".format(b.shape, b_shape)
+            assert b.shape == b_shape, "Shape of given b does not match given n_in, n_out. " \
+                                       "{} != {}".format(b.shape, b_shape)
         else:
             raise Exception("Unsupported b type {}.".format(type(b)))
 

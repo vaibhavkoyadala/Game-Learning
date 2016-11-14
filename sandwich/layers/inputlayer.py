@@ -15,7 +15,7 @@ class InputLayer(base.Base):
 
     def __init__(self, shape):
         """
-        :type shape:    tuple
+        :param input:   shared theano variable holding the input for the
         :param shape:   shape of a single input instance
                         e.g.for 32x32 B&W images, shape = (32x32, ) or (1, 32, 32)
                                                           depending on the receiving layer.
@@ -26,7 +26,7 @@ class InputLayer(base.Base):
         self.shape = shape
         self.ndim = len(shape)
         nd_tensor = T.TensorType(theano.config.floatX,
-                                 broadcastable=(False, )*(self.ndim+1)) # note the +1
+                             broadcastable=(False, )*(self.ndim+1)) # note the +1
         self.out = nd_tensor()
 
 
