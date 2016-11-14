@@ -1,23 +1,16 @@
-# Game-Learning
-Project to learn and play games using Deep Learning. (a week old)
+# Game Learning
+Project to learn and play games using Deep Learning. 
 
 # Sandwich 
-Sandwich is a lib to build a Neural Network. Much like 'lasange'.
+Sandwich is a lib to build a Neural Network.  
+(Much like 'lasagne', which I came to know about later)
 
-# Current status
-- Tested sandwich by training a LeNet to recognize handwritten digits.
-- Added and tested various Gradient descent optimization techniques.
-
-# Results
-- Succesfully learns to recognize handwritten digits.
-
-# Future work
-- Use a NNet and policy learning to learn to play ping-pong. (Specifically ping-pong).
-- Implement Google's deep game learning to play any Atari Game.
+# Status
+- A CNN took about 35s to achieve an accuracy of 99.91 (slight overfitting) on a Nvidia GTX 650 GPU on the MNIST dataset.
+- Training a CNN to predict Q values for ping-pong. (Deep game learning)   
 
 # Finding your way around
-+ *digits.tra*: Training dataset for handwritten digits.
-+ *digits.va* : Validation/Evaluation dataset for handwritten digits.
-+ *sandwich*  : Neural network library built using theano, numpy.
-+ *digits.py* : Script to test *sandwich* by training nets for handwritten digits.
++ *sandwich*  : Neural network library built using **theano**, **numpy**.
++ *cnn.py*    : Train a CNN on the MNIST dataset using **sandwich**. 
+
 
